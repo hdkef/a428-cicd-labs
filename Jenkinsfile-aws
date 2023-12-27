@@ -1,0 +1,43 @@
+node {
+
+    env.NODEJS_HOME = "${tool 'Node 16.x'}"
+    env.PATH="${env.NODEJS_HOME}/bin:${env.PATH}"
+    sh 'npm --version'
+
+    stage('Clone repository') {
+        // Run npm install
+        sh 'rm -rf react-app'
+        sh "git clone -b react-app ${env.REACT_REPO} react-app"
+    }
+
+    stage('Install Dependencies') {
+        // Run npm install
+        sh 'cd /var/jenkins_home/workspace/react-app/react-app && npm install'
+    }
+
+    stage('Run Tests') {
+        // Run npm test
+        sh 'cd /var/jenkins_home/workspace/react-app/react-app && npm test' 
+    }
+
+    stage('Build image') {
+        sh 'cd /var/jenkins_home/workspace/react-app/react-app && npm run build && docker build . -f deploy/Dockerfile --tag react-app:latest'
+    }
+
+    stage('Manual Approval'){
+        input "Do you want to continue?"
+    }
+
+    stage('Deploy') {
+        // memberhentikan container
+        sh 'docker container stop react-app || echo "container react-app does not exist"' 
+        // menghapus container
+        sh 'docker container rm react-app || echo "container react-app does not exist"'
+        // merunning container dari image nginx
+        sh 'docker run --name react-app -p 3000:80 -d react-app:latest'
+        // sleep 1 menit
+        sh 'sleep 60'
+        // stop app
+        sh 'docker container stop react-app'
+    }
+}
