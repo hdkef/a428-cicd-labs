@@ -4,13 +4,10 @@ node {
     env.PATH="${env.NODEJS_HOME}/bin:${env.PATH}"
     sh 'npm --version'
 
-    stage('Clone repository') {
-        // Run npm install
+    stage('Init') {
+        // Clone repository
         sh 'rm -rf react-app'
         sh "git clone -b react-app ${env.REACT_REPO} react-app"
-    }
-
-    stage('Install Dependencies') {
         // Run npm install
         sh 'cd /var/jenkins_home/workspace/react-app/react-app && npm install'
     }
